@@ -21,8 +21,14 @@ Lastly, please see the [Keyboard/Touchpad/Touchbar](https://gist.github.com/road
 DKMS module (Debian & co):
 --------------------------
 As root, do the following (all MacBook's and MacBook Pro's except MacBook8,1 (2015)):
-```
-echo -e "\n# applespi\napplespi\nspi_pxa2xx_platform\nintel_lpss_pci" >> /etc/initramfs-tools/modules
+```sh
+cat >> /etc/initramfs-tools/modules << __END
+
+# applespi
+applespi
+spi_pxa2xx_platform
+itel_lpss_pci
+__END
 
 apt install dkms
 git clone https://github.com/roadrunner2/macbook12-spi-driver.git /usr/src/applespi-0.1
@@ -30,8 +36,14 @@ dkms install -m applespi -v 0.1
 ```
 
 If you're on a MacBook8,1 (2015):
-```
-echo -e "\n# applespi\napplespi\nspi_pxa2xx_platform\nspi_pxa2xx_pci" >> /etc/initramfs-tools/modules
+```sh
+cat >> /etc/initramfs-tools/modules << __END
+
+# applespi
+applespi
+spi_pxa2xx_platform
+spi_pxa2xx_pci
+__END
 
 apt install dkms
 git clone https://github.com/roadrunner2/macbook12-spi-driver.git /usr/src/applespi-0.1
@@ -45,10 +57,9 @@ You can build the akmod package from this repository:
 https://pagure.io/fedora-macbook12-spi-driver-kmod
 
 Or use this [copr repository](https://copr.fedorainfracloud.org/coprs/meeuw/macbook12-spi-driver-kmod/):
-```
-$ dnf copr enable meeuw/macbook12-spi-driver-kmod
-
-$ dnf install macbook12-spi-driver-kmod
+```sh
+sudo dnf copr enable meeuw/macbook12-spi-driver-kmod
+sudo dnf install macbook12-spi-driver-kmod
 ```
 
 What doesn't work:
@@ -59,17 +70,17 @@ What doesn't work:
 Debugging:
 ----------
 Packet tracing is exposed via the kernel tracepoints framework. Tracing of individual packet types can be enabled with something like the following:
-```
+```sh
 echo 1 | sudo tee /sys/kernel/debug/tracing/events/applespi/applespi_keyboard_data/enable
 ```
 The packets are then visible in `/sys/kernel/debug/tracing/trace`
 
 Trackpad dimensions logging can be enabled with
-```
+```sh
 echo 1 | sudo tee /sys/kernel/debug/applespi/enable_tp_dim
 ```
 and then viewed with something like
-```
+```sh
 sudo watch /sys/kernel/debug/applespi/tp_dim
 ```
 
@@ -83,7 +94,7 @@ The ALS driver exposes the ambient light sensor; if you have the `iio-sensor-pro
 
 Upgrading:
 ----------
-The touchbar and ALS drivers used to be in a single module, `appletb`. This has now been split up into 3 modules, `apple_ibridge`, `apple_ib_tb`, and `apple_ib_als`. Generally whereever you were using `appletb` (e.g. in the initrd/dracut/whatever configs) you want to use `apple_ib_tb` now. Also, make sure to remove the old `appletb` module, either by first doing a `sudo dkms remove applespi/0.1 --all` before upgrading, or by manually removing the driver (e.g. `sudo find /lib/modules/ -name appletb.ko | xargs rm`).
+The touchbar and ALS drivers used to be in a single module, `appletb`. This has now been split up into 3 modules, `apple_ibridge`, `apple_ib_tb`, and `apple_ib_als`. Generally whereever you were using `appletb` (e.g. in the initrd/dracut/whatever configs) you want to use `apple_ib_tb` now. Also, make sure to remove the old `appletb` module, either by first doing a `sudo dkms remove applespi/0.1 --all` before upgrading, or by manually removing the driver (e.g. `find /lib/modules/ -name appletb.ko | xargs sudo rm`).
 
 Some useful threads:
 --------------------
